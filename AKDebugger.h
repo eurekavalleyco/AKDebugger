@@ -1,6 +1,6 @@
 //
 //  AKDebugger.h
-//  Databox
+//  AKDebugger
 //
 //  Created by Ken M. Haggerty on 9/24/13.
 //  Copyright (c) 2013 Eureka Valley Co. All rights reserved.

@@ -49,6 +49,7 @@
 // RULES (Custom Categories) //
 
 + (NSSet *)customCategoriesToPrint;
++ (NSSet *)customCategoriesToSkip;
 
 // RULES (View Controllers) //
 

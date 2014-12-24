@@ -378,6 +378,11 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
         if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", category, __PRETTY_FUNCTION__);
         return NO;
     }
+    else if (([RULES_CLASS customCategoriesToSkip].count > 0) && ([[RULES_CLASS customCategoriesToSkip] containsObject:category]))
+    {
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", category, __PRETTY_FUNCTION__);
+        return NO;
+    }
     return YES;
 }
 

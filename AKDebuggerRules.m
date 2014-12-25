@@ -1,6 +1,6 @@
 //
 //  AKDebuggerRules.m
-//  Databox
+//  <#ProjectName#>
 //
 //  Created by Ken M. Haggerty on 10/11/13.
 //  Copyright (c) 2013 Eureka Valley Co. All rights reserved.

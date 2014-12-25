@@ -40,6 +40,7 @@
 // RULES (Custom Categories) //
 
 #define CUSTOM_CATEGORIES_TO_PRINT [NSSet setWithObjects:nil]
+#define CUSTOM_CATEGORIES_TO_SKIP [NSSet setWithObjects:nil]
 
 // RULES (View Controllers) //
 
@@ -201,6 +202,13 @@
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
     return CUSTOM_CATEGORIES_TO_PRINT;
+}
+
++ (NSSet *)customCategoriesToSkip
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+    
+    return CUSTOM_CATEGORIES_TO_SKIP;
 }
 
 #pragma mark - // PUBLIC METHODS (View Controllers) //

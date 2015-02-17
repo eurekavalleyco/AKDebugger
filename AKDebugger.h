@@ -33,6 +33,7 @@
 + (BOOL)printSetup;
 + (BOOL)printSetters;
 + (BOOL)printGetters;
++ (BOOL)printCreators;
 + (BOOL)printValidators;
 + (BOOL)printUnspecified;
 
@@ -100,6 +101,7 @@ typedef enum {
     AKMethodTypeSetup,
     AKMethodTypeSetter,
     AKMethodTypeGetter,
+    AKMethodTypeCreator,
     AKMethodTypeValidator
 } AKMethodType;
 

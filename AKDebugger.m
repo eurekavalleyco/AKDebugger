@@ -347,6 +347,13 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
                 return NO;
             }
             break;
+        case AKMethodTypeCreator:
+            if (![RULES_CLASS printCreators])
+            {
+                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_CREATORS = NO for %s", __PRETTY_FUNCTION__);
+                return NO;
+            }
+            break;
         case AKMethodTypeValidator:
             if (![RULES_CLASS printValidators])
             {

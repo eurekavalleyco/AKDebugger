@@ -24,6 +24,7 @@
 #define PRINT_SETUP YES
 #define PRINT_SETTERS YES
 #define PRINT_GETTERS YES
+#define PRINT_CREATORS YES
 #define PRINT_VALIDATORS YES
 #define PRINT_UNSPECIFIED YES
 
@@ -116,6 +117,13 @@
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
     return PRINT_GETTERS;
+}
+
++ (BOOL)printCreators
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+    
+    return PRINT_CREATORS;
 }
 
 + (BOOL)printValidators

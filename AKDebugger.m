@@ -13,6 +13,7 @@
 #pragma mark - // IMPORTS (Private) //
 
 #import "AKDebugger.h"
+#import "AKGenerics.h"
 
 #pragma mark - // DEFINITIONS (Private) //
 
@@ -82,66 +83,76 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
 
 #pragma mark - // PUBLIC METHODS (Settings) //
 
-+ (BOOL)printForMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType
-{
-    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
-    
-    BOOL shouldPrint = NO;
-    if (RULES_CLASS)
-    {
-        if ([RULES_CLASS conformsToProtocol:@protocol(AKDebuggerRules)])
-        {
-            if ([RULES_CLASS masterOn])
-            {
-                shouldPrint = YES;
-                if (![AKDebugger printForLogType:logType]) shouldPrint = NO;
-                if (![AKDebugger printForMethodType:methodType]) shouldPrint = NO;
-                NSDictionary *dictionary = [AKDebugger dictionaryForPrettyFunction:prettyFunction];
-                AKMethodScope methodScope = [[dictionary objectForKey:SCOPE] intValue];
-                if (![AKDebugger printForScope:methodScope]) shouldPrint = NO;
-                NSString *className = [dictionary objectForKey:CLASS];
-                if (![AKDebugger printForClass:className]) shouldPrint = NO;
-                NSString *categoryName = [dictionary objectForKey:CATEGORY];
-                if (![AKDebugger printForCategory:categoryName]) shouldPrint = NO;
-                NSString *methodName = [dictionary objectForKey:METHOD];
-                if (![AKDebugger printForMethodName:methodName]) shouldPrint = NO;
-            }
-        }
-        else AKLog(@"[WARNING] %@ does not conform to protocol <AKDebuggerRules> for %s", RULES_CLASS, __PRETTY_FUNCTION__);
-    }
-    else AKLog(@"[WARNING] %@ is of unknown class or does not exist for %s", RULES_CLASS, __PRETTY_FUNCTION__);
-    return shouldPrint;
-}
+//+ (BOOL)printForMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType
+//{
+//    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+//    
+//    BOOL shouldPrint = NO;
+//    if (RULES_CLASS)
+//    {
+//        if ([RULES_CLASS conformsToProtocol:@protocol(AKDebuggerRules)])
+//        {
+//            if ([RULES_CLASS masterOn])
+//            {
+//                shouldPrint = YES;
+//                if (![AKDebugger printForLogType:logType]) shouldPrint = NO;
+//                if (![AKDebugger printForMethodType:methodType]) shouldPrint = NO;
+//                NSDictionary *dictionary = [AKDebugger dictionaryForPrettyFunction:prettyFunction];
+//                AKMethodScope methodScope = [[dictionary objectForKey:SCOPE] intValue];
+//                if (![AKDebugger printForScope:methodScope]) shouldPrint = NO;
+//                NSString *className = [dictionary objectForKey:CLASS];
+//                if (![AKDebugger printForClass:className]) shouldPrint = NO;
+//                NSString *categoryName = [dictionary objectForKey:CATEGORY];
+//                if (![AKDebugger printForCategory:categoryName]) shouldPrint = NO;
+//                NSString *methodName = [dictionary objectForKey:METHOD];
+//                if (![AKDebugger printForMethodName:methodName]) shouldPrint = NO;
+//            }
+//        }
+//        else AKLog(@"[WARNING] %@ does not conform to protocol <AKDebuggerRules> for %s", RULES_CLASS, __PRETTY_FUNCTION__);
+//    }
+//    else AKLog(@"[WARNING] %@ is of unknown class or does not exist for %s", RULES_CLASS, __PRETTY_FUNCTION__);
+//    return shouldPrint;
+//}
 
-+ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategory:(NSString *)category message:(NSString *)message
++ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategories:(NSArray *)categories message:(NSString *)message
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    BOOL shouldPrint = NO;
-    if (RULES_CLASS)
+    if (!RULES_CLASS)
     {
-        if ([RULES_CLASS conformsToProtocol:@protocol(AKDebuggerRules)])
-        {
-            if ([RULES_CLASS masterOn])
-            {
-                shouldPrint = YES;
-                if (![AKDebugger printForLogType:logType]) shouldPrint = NO;
-                if (![AKDebugger printForMethodType:methodType]) shouldPrint = NO;
-                if (![AKDebugger printForCustomCategory:category]) shouldPrint = NO;
-                NSDictionary *dictionary = [AKDebugger dictionaryForPrettyFunction:prettyFunction];
-                AKMethodScope methodScope = [[dictionary objectForKey:SCOPE] intValue];
-                if (![AKDebugger printForScope:methodScope]) shouldPrint = NO;
-                NSString *className = [dictionary objectForKey:CLASS];
-                if (![AKDebugger printForClass:className]) shouldPrint = NO;
-                NSString *categoryName = [dictionary objectForKey:CATEGORY];
-                if (![AKDebugger printForCategory:categoryName]) shouldPrint = NO;
-                NSString *methodName = [dictionary objectForKey:METHOD];
-                if (![AKDebugger printForMethodName:methodName]) shouldPrint = NO;
-            }
-        }
-        else AKLog(@"[WARNING] %@ does not conform to protocol <AKDebuggerRules> for %s", NSStringFromClass(RULES_CLASS), __PRETTY_FUNCTION__);
+        AKLog(@"[WARNING] Class %@ is unknown or does not exist for %s", NSStringFromClass(RULES_CLASS), __PRETTY_FUNCTION__);
+        return;
     }
-    else AKLog(@"[WARNING] Class %@ is unknown or does not exist for %s", NSStringFromClass(RULES_CLASS), __PRETTY_FUNCTION__);
+    
+    if (![RULES_CLASS conformsToProtocol:@protocol(AKDebuggerRules)])
+    {
+        AKLog(@"[WARNING] %@ does not conform to protocol <%@> for %s", NSStringFromClass(RULES_CLASS), NSStringFromProtocol(@protocol(AKDebuggerRules)), __PRETTY_FUNCTION__);
+        return;
+    }
+    
+    if (![RULES_CLASS masterOn]) return;
+    
+    BOOL shouldPrint = YES;
+    
+    if (![AKDebugger printForLogType:logType]) shouldPrint = NO;
+    
+    if (![AKDebugger printForMethodType:methodType]) shouldPrint = NO;
+    
+    for (NSString *category in categories)
+    {
+        if (![AKDebugger printForCustomCategory:category]) shouldPrint = NO;
+    }
+    
+    NSDictionary *dictionary = [AKDebugger dictionaryForPrettyFunction:prettyFunction];
+    
+    if (![AKDebugger printForScope:[[dictionary objectForKey:SCOPE] intValue]]) shouldPrint = NO;
+    
+    if (![AKDebugger printForClass:[dictionary objectForKey:CLASS]]) shouldPrint = NO;
+    
+    if (![AKDebugger printForCategory:[dictionary objectForKey:CATEGORY]]) shouldPrint = NO;
+    
+    if (![AKDebugger printForMethodName:[dictionary objectForKey:METHOD]]) shouldPrint = NO;
+    
     if (shouldPrint) [AKDebugger printMethod:prettyFunction logType:logType message:message];
 }
 
@@ -188,7 +199,7 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
             AKLogDebug([NSString stringWithFormat:@"%@", message]);
             break;
         default:
-            if (PRINT_DEBUGGER) AKLog(@"Unknown logType for %s", __PRETTY_FUNCTION__);
+            if (PRINT_DEBUGGER) AKLog(@"Unknown %@ for %s", stringFromVariable(logType), __PRETTY_FUNCTION__);
             break;
     }
 }
@@ -197,44 +208,53 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (prettyFunction)
+    if (!prettyFunction)
     {
-        NSArray *components = [prettyFunction componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"[ ]"]];
-        if (components.count == 4)
-        {
-            NSNumber *methodScope;
-            NSString *scopeString = [components objectAtIndex:0];
-            if ([[scopeString substringFromIndex:scopeString.length-1] isEqualToString:@"+"]) methodScope = [NSNumber numberWithInt:AKClassMethod];
-            else if ([[scopeString substringFromIndex:scopeString.length-1] isEqualToString:@"-"]) methodScope = [NSNumber numberWithInt:AKInstanceMethod];
-            else AKLog(@"[WARNING] Unknown methodScope for %s", __PRETTY_FUNCTION__);
-            NSString *className;
-            NSString *categoryName;
-            NSArray *classComponents = [[components objectAtIndex:1] componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"()"]];
-            if (classComponents.count == 3)
-            {
-                className = [classComponents objectAtIndex:0];
-                categoryName = [classComponents objectAtIndex:1];
-            }
-            else
-            {
-                className = [components objectAtIndex:1];
-                categoryName = @"";
-            }
-            NSString *methodName = [components objectAtIndex:2];
-            if (PRINT_DEBUGGER)
-            {
-                if (!methodScope) AKLog(@"[INFO] methodScope is nil for %s", __PRETTY_FUNCTION__);
-                if (!className) AKLog(@"[INFO] className is nil for %s", __PRETTY_FUNCTION__);
-                if (!methodName) AKLog(@"[INFO] methodName is nil for %s", __PRETTY_FUNCTION__);
-            }
-            if (methodScope && className && methodName)
-            return [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:methodScope, className, categoryName, methodName, nil] forKeys:[NSArray arrayWithObjects:SCOPE, CLASS, CATEGORY, METHOD, nil]];
-            
-        }
-        else if(PRINT_DEBUGGER) AKLog(@"[INFO] Could not parse prettyString for %s", __PRETTY_FUNCTION__);
+        if(PRINT_DEBUGGER) AKLog(@"[INFO] %@ cannot be nil for %s", stringFromVariable(prettyFunction), __PRETTY_FUNCTION__);
+        return nil;
     }
-    else if(PRINT_DEBUGGER) AKLog(@"[INFO] prettyFunction cannot be nil for %s", __PRETTY_FUNCTION__);
-    return nil;
+    
+    NSArray *components = [prettyFunction componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"[ ]"]];
+    if (components.count != 4)
+    {
+        if(PRINT_DEBUGGER) AKLog(@"[INFO] Could not parse %@ for %s", stringFromVariable(prettyFunction), __PRETTY_FUNCTION__);
+        return nil;
+    }
+    
+    NSNumber *methodScope;
+    NSString *scopeString = [components objectAtIndex:0];
+    if ([[scopeString substringFromIndex:scopeString.length-1] isEqualToString:@"+"])
+    {
+        methodScope = [NSNumber numberWithInt:AKClassMethod];
+    }
+    else if ([[scopeString substringFromIndex:scopeString.length-1] isEqualToString:@"-"])
+    {
+        methodScope = [NSNumber numberWithInt:AKInstanceMethod];
+    }
+    else AKLog(@"[WARNING] Unknown %@ for %s", stringFromVariable(methodScope), __PRETTY_FUNCTION__);
+    NSString *className;
+    NSString *categoryName;
+    NSArray *classComponents = [[components objectAtIndex:1] componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"()"]];
+    if (classComponents.count == 3)
+    {
+        className = [classComponents objectAtIndex:0];
+        categoryName = [classComponents objectAtIndex:1];
+    }
+    else
+    {
+        className = [components objectAtIndex:1];
+        categoryName = @"";
+    }
+    NSString *methodName = [components objectAtIndex:2];
+    if (PRINT_DEBUGGER)
+    {
+        if (!methodScope) AKLog(@"[INFO] %@ is nil for %s", stringFromVariable(methodScope), __PRETTY_FUNCTION__);
+        if (!className) AKLog(@"[INFO] %@ is nil for %s", stringFromVariable(className), __PRETTY_FUNCTION__);
+        if (!methodName) AKLog(@"[INFO] %@ is nil for %s", stringFromVariable(methodName), __PRETTY_FUNCTION__);
+    }
+    if (!methodScope || !className || !methodName) return nil;
+    
+    return [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:methodScope, className, categoryName, methodName, nil] forKeys:[NSArray arrayWithObjects:SCOPE, CLASS, CATEGORY, METHOD, nil]];
 }
 
 + (BOOL)printForLogType:(AKLogType)logType
@@ -426,59 +446,54 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
     Class class = NSClassFromString(className);
-    if (class)
+    if (!class)
     {
-        if ([class isSubclassOfClass:[UIViewController class]])
+        AKLog(@"[WARNING] Unrecognized %@ %@ for %s", stringFromVariable(class), className, __PRETTY_FUNCTION__);
+        return NO;
+    }
+    
+    if ([class isSubclassOfClass:[UIViewController class]])
+    {
+        if (![RULES_CLASS printViewControllers])
         {
-            if ([RULES_CLASS printViewControllers])
-            {
-                if ([[RULES_CLASS viewControllersToSkip] containsObject:className])
-                {
-                    if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
-                    return NO;
-                }
-            }
-            else
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VIEWCONTROLLERS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VIEWCONTROLLERS = NO for %s", __PRETTY_FUNCTION__);
+            return NO;
         }
-        else if ([class isSubclassOfClass:[UIView class]])
+        
+        if ([[RULES_CLASS viewControllersToSkip] containsObject:className])
         {
-            if ([RULES_CLASS printViews])
-            {
-                if ([[RULES_CLASS viewsToSkip] containsObject:className])
-                {
-                    if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
-                    return NO;
-                }
-            }
-            else
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VIEWS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
+            return NO;
         }
-        else if ([RULES_CLASS printOtherClasses])
+    }
+    else if ([class isSubclassOfClass:[UIView class]])
+    {
+        if (![RULES_CLASS printViews])
         {
-            if ([[RULES_CLASS otherClassesToSkip] containsObject:className])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
-                return NO;
-            }
+            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VIEWS = NO for %s", __PRETTY_FUNCTION__);
+            return NO;
         }
-        else
+        
+        if ([[RULES_CLASS viewsToSkip] containsObject:className])
         {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_OTHERCLASSES = NO for %s", __PRETTY_FUNCTION__);
+            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
+            return NO;
+        }
+    }
+    else if ([RULES_CLASS printOtherClasses])
+    {
+        if ([[RULES_CLASS otherClassesToSkip] containsObject:className])
+        {
+            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
             return NO;
         }
     }
     else
     {
-        AKLog(@"[WARNING] Unrecognized class %@ for %s", className, __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_OTHERCLASSES = NO for %s", __PRETTY_FUNCTION__);
         return NO;
     }
+    
     return YES;
 }
 
@@ -486,19 +501,18 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if ([RULES_CLASS printCategories])
-    {
-        if ([[RULES_CLASS categoriesToSkip] containsObject:categoryName])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", categoryName, __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else
+    if (![RULES_CLASS printCategories])
     {
         if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_CATEGORIES = NO for %s", __PRETTY_FUNCTION__);
         return NO;
     }
+    
+    if ([[RULES_CLASS categoriesToSkip] containsObject:categoryName])
+    {
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", categoryName, __PRETTY_FUNCTION__);
+        return NO;
+    }
+    
     return YES;
 }
 
@@ -507,22 +521,20 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
     NSSet *methodsToPrint = [RULES_CLASS methodsToPrint];
-    if ((methodsToPrint) && (methodsToPrint.count > 0))
+    if (methodsToPrint)
     {
         if (![methodsToPrint containsObject:methodName])
         {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ not a method to print for %s", methodName, __PRETTY_FUNCTION__);
+            if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ does not contain %@ for %s", stringFromVariable(methodsToPrint), methodName, __PRETTY_FUNCTION__);
             return NO;
         }
     }
-    else
+    else if ([[RULES_CLASS methodsToSkip] containsObject:methodName])
     {
-        if ([[RULES_CLASS methodsToSkip] containsObject:methodName])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", methodName, __PRETTY_FUNCTION__);
-            return NO;
-        }
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", methodName, __PRETTY_FUNCTION__);
+        return NO;
     }
+    
     return YES;
 }
 

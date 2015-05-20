@@ -18,6 +18,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #include <asl.h>
+#import "AKDebuggerCategories.h"
 
 #pragma mark - // PROTOCOLS //
 
@@ -168,6 +169,6 @@ typedef enum {
 #endif
 
 @interface AKDebugger : NSObject
-+ (BOOL)printForMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType;
-+ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategory:(NSString *)category message:(NSString *)message;
+//+ (BOOL)printForMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType;
++ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategories:(NSArray *)categories message:(NSString *)message;
 @end

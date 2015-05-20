@@ -35,6 +35,8 @@
 + (BOOL)printSetters;
 + (BOOL)printGetters;
 + (BOOL)printCreators;
++ (BOOL)printDeletors;
++ (BOOL)printActions;
 + (BOOL)printValidators;
 + (BOOL)printUnspecified;
 
@@ -103,6 +105,8 @@ typedef enum {
     AKMethodTypeSetter,
     AKMethodTypeGetter,
     AKMethodTypeCreator,
+    AKMethodTypeDeletor,
+    AKMethodTypeAction,
     AKMethodTypeValidator
 } AKMethodType;
 

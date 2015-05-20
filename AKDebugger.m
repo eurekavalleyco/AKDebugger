@@ -374,6 +374,20 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
                 return NO;
             }
             break;
+        case AKMethodTypeDeletor:
+            if (![RULES_CLASS printDeletors])
+            {
+                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_DELETORS = NO for %s", __PRETTY_FUNCTION__);
+                return NO;
+            }
+            break;
+        case AKMethodTypeAction:
+            if (![RULES_CLASS printActions])
+            {
+                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_ACTIONS = NO for %s", __PRETTY_FUNCTION__);
+                return NO;
+            }
+            break;
         case AKMethodTypeValidator:
             if (![RULES_CLASS printValidators])
             {

@@ -12,3 +12,4 @@
 #define AKD_CORE_DATA @"Core Data"
 #define AKD_PARSE @"Parse"
 #define AKD_PUSH_NOTIFICATIONS @"Push Notifications"
+#define AKD_ANALYLTICS @"Analytics"

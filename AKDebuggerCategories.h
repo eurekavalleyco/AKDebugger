@@ -8,6 +8,7 @@
 
 #define AKD_UI @"User Interface"
 #define AKD_NOTIFICATION_CENTER @"Notification Center"
+#define AKD_DATA @"Data"
 #define AKD_ACCOUNTS @"Accounts"
 #define AKD_CORE_DATA @"Core Data"
 #define AKD_PARSE @"Parse"

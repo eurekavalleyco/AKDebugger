@@ -462,7 +462,7 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
     Class class = NSClassFromString(className);
     if (!class)
     {
-        AKLog(@"[WARNING] Unrecognized %@ %@ for %s", stringFromVariable(class), className, __PRETTY_FUNCTION__);
+        AKLog(@"[WARNING] Unrecognized class %@ for %s", className, __PRETTY_FUNCTION__);
         return NO;
     }
     

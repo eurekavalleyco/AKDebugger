@@ -53,26 +53,46 @@ void NAME (NSString *format, ...) \
     va_end(args); \
 }
 
-__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
-__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_ALERT, AKLogAlert)
-__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_CRIT, AKLogCritical)
-__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_ERR, AKLogError)
-__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_WARNING, AKLogWarning)
-__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_NOTICE, AKLogNotice)
 __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_INFO, AKLogInfo)
 __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
+__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_NOTICE, AKLogNotice)
+__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_ALERT, AKLogAlert)
+__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_WARNING, AKLogWarning)
+__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_ERR, AKLogError)
+__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_CRIT, AKLogCritical)
+__AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 
 #undef __AK_MAKE_LOG_FUNCTION
 
 @interface AKDebugger ()
-+ (void)printMethod:(NSString *)prettyFunction logType:(AKLogType)logType message:(NSString *)message;
+
+// GENERAL //
+
 + (NSDictionary *)dictionaryForPrettyFunction:(NSString *)prettyFunction;
++ (void)printMethod:(NSString *)prettyFunction logType:(AKLogType)logType message:(NSString *)message;
++ (void)didPrintLogType:(AKLogType)logType;
+
+// VALIDATORS //
+
 + (BOOL)printForLogType:(AKLogType)logType;
 + (BOOL)printForMethodType:(AKMethodType)methodType;
 + (BOOL)printForScope:(AKMethodScope)methodScope;
 + (BOOL)printForClass:(NSString *)className;
 + (BOOL)printForCategory:(NSString *)categoryName;
 + (BOOL)printForMethodName:(NSString *)methodName;
+
+// BREAKPOINTS //
+
++ (void)logTypeMethodName;
++ (void)logTypeInfo;
++ (void)logTypeDebug;
++ (void)logTypeNotice;
++ (void)logTypeAlert;
++ (void)logTypeWarning;
++ (void)logTypeError;
++ (void)logTypeCritical;
++ (void)logTypeEmergency;
+
 @end
 
 @implementation AKDebugger
@@ -164,45 +184,7 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
 
 #pragma mark - // OVERWRITTEN METHODS //
 
-#pragma mark - // PRIVATE METHODS //
-
-+ (void)printMethod:(NSString *)prettyFunction logType:(AKLogType)logType message:(NSString *)message
-{
-    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
-    
-    switch (logType) {
-        case AKLogTypeMethodName:
-            AKLogInfo([NSString stringWithFormat:@"%@", prettyFunction]);
-            break;
-        case AKLogTypeEmergency:
-            AKLogEmergency([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeAlert:
-            AKLogAlert([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeCritical:
-            AKLogCritical([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeError:
-            AKLogError([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeWarning:
-            AKLogWarning([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeNotice:
-            AKLogNotice([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeInfo:
-            AKLogInfo([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
-            break;
-        case AKLogTypeDebug:
-            AKLogDebug([NSString stringWithFormat:@"%@", message]);
-            break;
-        default:
-            if (PRINT_DEBUGGER) AKLog(@"Unknown %@ for %s", stringFromVariable(logType), __PRETTY_FUNCTION__);
-            break;
-    }
-}
+#pragma mark - // PRIVATE METHODS (General) //
 
 + (NSDictionary *)dictionaryForPrettyFunction:(NSString *)prettyFunction
 {
@@ -256,6 +238,85 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
     
     return [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:methodScope, className, categoryName, methodName, nil] forKeys:[NSArray arrayWithObjects:SCOPE, CLASS, CATEGORY, METHOD, nil]];
 }
+
++ (void)printMethod:(NSString *)prettyFunction logType:(AKLogType)logType message:(NSString *)message
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+    
+    switch (logType) {
+        case AKLogTypeMethodName:
+            AKLogInfo([NSString stringWithFormat:@"%@", prettyFunction]);
+            break;
+        case AKLogTypeInfo:
+            AKLogInfo([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        case AKLogTypeDebug:
+            AKLogDebug([NSString stringWithFormat:@"%@", message]);
+            break;
+        case AKLogTypeNotice:
+            AKLogNotice([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        case AKLogTypeAlert:
+            AKLogAlert([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        case AKLogTypeWarning:
+            AKLogWarning([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        case AKLogTypeError:
+            AKLogError([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        case AKLogTypeCritical:
+            AKLogCritical([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        case AKLogTypeEmergency:
+            AKLogEmergency([NSString stringWithFormat:@"%@ %@", prettyFunction, message]);
+            break;
+        default:
+            if (PRINT_DEBUGGER) AKLog(@"Unknown %@ for %s", stringFromVariable(logType), __PRETTY_FUNCTION__);
+            break;
+    }
+    [AKDebugger didPrintLogType:logType];
+}
+
++ (void)didPrintLogType:(AKLogType)logType
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+    
+    switch (logType) {
+        case AKLogTypeMethodName:
+            [AKDebugger logTypeMethodName];
+            break;
+        case AKLogTypeInfo:
+            [AKDebugger logTypeInfo];
+            break;
+        case AKLogTypeDebug:
+            [AKDebugger logTypeDebug];
+            break;
+        case AKLogTypeNotice:
+            [AKDebugger logTypeNotice];
+            break;
+        case AKLogTypeAlert:
+            [AKDebugger logTypeAlert];
+            break;
+        case AKLogTypeWarning:
+            [AKDebugger logTypeWarning];
+            break;
+        case AKLogTypeError:
+            [AKDebugger logTypeError];
+            break;
+        case AKLogTypeCritical:
+            [AKDebugger logTypeCritical];
+            break;
+        case AKLogTypeEmergency:
+            [AKDebugger logTypeEmergency];
+            break;
+        default:
+            if (PRINT_DEBUGGER) AKLog(@"Unknown %@ for %s", stringFromVariable(logType), __PRETTY_FUNCTION__);
+            break;
+    }
+}
+
+#pragma mark - // PRIVATE METHODS (Validators) //
 
 + (BOOL)printForLogType:(AKLogType)logType
 {
@@ -551,5 +612,53 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_DEBUG, AKLogDebug)
     
     return YES;
 }
+
+#pragma mark - // PRIVATE METHODS (Breakpoints) //
+
++ (void)logTypeMethodName
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeInfo
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeDebug
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeNotice
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeAlert
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeWarning
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeError
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeCritical
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
++ (void)logTypeEmergency
+{
+    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
+}
+
 
 @end

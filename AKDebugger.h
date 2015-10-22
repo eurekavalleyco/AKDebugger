@@ -41,14 +41,14 @@
 + (BOOL)printUnspecified;
 
 + (BOOL)printMethodNames;
-+ (BOOL)printEmergencies;
-+ (BOOL)printAlerts;
-+ (BOOL)printFailures;
-+ (BOOL)printErrors;
-+ (BOOL)printWarnings;
-+ (BOOL)printNotices;
 + (BOOL)printInformation;
 + (BOOL)printDebug;
++ (BOOL)printNotices;
++ (BOOL)printAlerts;
++ (BOOL)printWarnings;
++ (BOOL)printErrors;
++ (BOOL)printFailures;
++ (BOOL)printEmergencies;
 
 // RULES (Custom Categories) //
 
@@ -88,15 +88,15 @@
 #define METHOD_NAME [NSString stringWithFormat:@"%s", __PRETTY_FUNCTION__]
 
 typedef enum {
-    AKLogTypeMethodName = 1,
-    AKLogTypeEmergency,
-    AKLogTypeAlert,
-    AKLogTypeCritical,
-    AKLogTypeError,
-    AKLogTypeWarning,
-    AKLogTypeNotice,
-    AKLogTypeInfo,
-    AKLogTypeDebug
+    AKLogTypeMethodName = 0,
+    AKLogTypeInfo = 1,
+    AKLogTypeDebug = 2,
+    AKLogTypeNotice = 3,
+    AKLogTypeAlert = 4,
+    AKLogTypeWarning = 5,
+    AKLogTypeError = 6,
+    AKLogTypeCritical = 7,
+    AKLogTypeEmergency = 8
 } AKLogType;
 
 typedef enum {
@@ -124,42 +124,6 @@ typedef enum {
     #endif
 #endif
 
-#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_EMERG
-    void AKLogEmergency(NSString *format, ...);
-#else
-    #define AKLogEmergency(...)
-#endif
-
-#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ALERT
-    void AKLogAlert(NSString *format, ...);
-#else
-    #define AKLogAlert(...)
-#endif
-
-#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_CRIT
-    void AKLogCritical(NSString *format, ...);
-#else
-    #define AKLogCritical(...)
-#endif
-
-#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ERR
-    void AKLogError(NSString *format, ...);
-#else
-    #define AKLogError(...)
-#endif
-
-#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_WARNING
-    void AKLogWarning(NSString *format, ...);
-#else
-    #define AKLogWarning(...)
-#endif
-
-#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_NOTICE
-    void AKLogNotice(NSString *format, ...);
-#else
-    #define AKLogNotice(...)
-#endif
-
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_INFO
     void AKLogInfo(NSString *format, ...);
 #else
@@ -170,6 +134,42 @@ typedef enum {
     void AKLogDebug(NSString *format, ...);
 #else
     #define AKLogDebug(...)
+#endif
+
+#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_NOTICE
+    void AKLogNotice(NSString *format, ...);
+#else
+    #define AKLogNotice(...)
+#endif
+
+#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ALERT
+    void AKLogAlert(NSString *format, ...);
+#else
+    #define AKLogAlert(...)
+#endif
+
+#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_WARNING
+    void AKLogWarning(NSString *format, ...);
+#else
+    #define AKLogWarning(...)
+#endif
+
+#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ERR
+    void AKLogError(NSString *format, ...);
+#else
+    #define AKLogError(...)
+#endif
+
+#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_CRIT
+    void AKLogCritical(NSString *format, ...);
+#else
+    #define AKLogCritical(...)
+#endif
+
+#if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_EMERG
+    void AKLogEmergency(NSString *format, ...);
+#else
+    #define AKLogEmergency(...)
 #endif
 
 @interface AKDebugger : NSObject

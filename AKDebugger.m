@@ -103,37 +103,6 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 
 #pragma mark - // PUBLIC METHODS (Settings) //
 
-//+ (BOOL)printForMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType
-//{
-//    if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
-//    
-//    BOOL shouldPrint = NO;
-//    if (RULES_CLASS)
-//    {
-//        if ([RULES_CLASS conformsToProtocol:@protocol(AKDebuggerRules)])
-//        {
-//            if ([RULES_CLASS masterOn])
-//            {
-//                shouldPrint = YES;
-//                if (![AKDebugger printForLogType:logType]) shouldPrint = NO;
-//                if (![AKDebugger printForMethodType:methodType]) shouldPrint = NO;
-//                NSDictionary *dictionary = [AKDebugger dictionaryForPrettyFunction:prettyFunction];
-//                AKMethodScope methodScope = [[dictionary objectForKey:SCOPE] intValue];
-//                if (![AKDebugger printForScope:methodScope]) shouldPrint = NO;
-//                NSString *className = [dictionary objectForKey:CLASS];
-//                if (![AKDebugger printForClass:className]) shouldPrint = NO;
-//                NSString *categoryName = [dictionary objectForKey:CATEGORY];
-//                if (![AKDebugger printForCategory:categoryName]) shouldPrint = NO;
-//                NSString *methodName = [dictionary objectForKey:METHOD];
-//                if (![AKDebugger printForMethodName:methodName]) shouldPrint = NO;
-//            }
-//        }
-//        else AKLog(@"[WARNING] %@ does not conform to protocol <AKDebuggerRules> for %s", RULES_CLASS, __PRETTY_FUNCTION__);
-//    }
-//    else AKLog(@"[WARNING] %@ is of unknown class or does not exist for %s", RULES_CLASS, __PRETTY_FUNCTION__);
-//    return shouldPrint;
-//}
-
 + (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategories:(NSArray *)categories message:(NSString *)message
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);

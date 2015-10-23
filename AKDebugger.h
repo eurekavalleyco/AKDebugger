@@ -173,6 +173,5 @@ typedef enum {
 #endif
 
 @interface AKDebugger : NSObject
-//+ (BOOL)printForMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType;
 + (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategories:(NSArray *)categories message:(NSString *)message;
 @end

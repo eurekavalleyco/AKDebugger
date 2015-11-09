@@ -17,6 +17,8 @@
 
 #pragma mark - // DEFINITIONS (Private) //
 
+#define DEFAULT_BOOL YES
+
 typedef enum {
     AKClassMethod = 1,
     AKInstanceMethod
@@ -68,7 +70,7 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 
 // GENERAL //
 
-+ (NSDictionary *)dictionaryForPrettyFunction:(NSString *)prettyFunction;
++ (NSDictionary *)dictionaryForPrettyFunction:(nonnull NSString *)prettyFunction;
 + (void)printMethod:(NSString *)prettyFunction logType:(AKLogType)logType message:(NSString *)message;
 + (void)didPrintLogType:(AKLogType)logType;
 
@@ -76,10 +78,11 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 
 + (BOOL)printForLogType:(AKLogType)logType;
 + (BOOL)printForMethodType:(AKMethodType)methodType;
++ (BOOL)printForTag:(NSString *)tag;
 + (BOOL)printForScope:(AKMethodScope)methodScope;
 + (BOOL)printForClass:(NSString *)className;
-+ (BOOL)printForCategory:(NSString *)categoryName;
-+ (BOOL)printForMethodName:(NSString *)methodName;
++ (BOOL)printForCategory:(NSString *)category;
++ (BOOL)printForMethodName:(NSString *)method;
 
 // BREAKPOINTS //
 
@@ -93,6 +96,11 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 + (void)logTypeCritical;
 + (void)logTypeEmergency;
 
+// RULES //
+
++ (BOOL)boolForRule:(SEL)rule;
++ (NSArray <NSString *> *)arrayForRule:(SEL)rule;
+
 @end
 
 @implementation AKDebugger
@@ -101,25 +109,13 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 
 #pragma mark - // INITS AND LOADS //
 
-#pragma mark - // PUBLIC METHODS (Settings) //
+#pragma mark - // PUBLIC METHODS //
 
-+ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategories:(NSArray *)categories message:(NSString *)message
++ (void)logMethod:(nonnull NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType tags:(nullable NSArray *)tags message:(nullable NSString *)message
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (!RULES_CLASS)
-    {
-        AKLog(@"[WARNING] Class %@ is unknown or does not exist for %s", NSStringFromClass(RULES_CLASS), __PRETTY_FUNCTION__);
-        return;
-    }
-    
-    if (![RULES_CLASS conformsToProtocol:@protocol(AKDebuggerRules)])
-    {
-        AKLog(@"[WARNING] %@ does not conform to protocol <%@> for %s", NSStringFromClass(RULES_CLASS), NSStringFromProtocol(@protocol(AKDebuggerRules)), __PRETTY_FUNCTION__);
-        return;
-    }
-    
-    if (![RULES_CLASS masterOn]) return;
+    if (![AKDebugger boolForRule:@selector(masterOn)]) return;
     
     BOOL shouldPrint = YES;
     
@@ -127,9 +123,12 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
     
     if (![AKDebugger printForMethodType:methodType]) shouldPrint = NO;
     
-    for (NSString *category in categories)
+    if (tags)
     {
-        if (![AKDebugger printForCustomCategory:category]) shouldPrint = NO;
+        for (NSString *tag in tags)
+        {
+            if (![AKDebugger printForTag:tag]) shouldPrint = NO;
+        }
     }
     
     NSDictionary *dictionary = [AKDebugger dictionaryForPrettyFunction:prettyFunction];
@@ -145,30 +144,20 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
     if (shouldPrint) [AKDebugger printMethod:prettyFunction logType:logType message:message];
 }
 
-#pragma mark - // PUBLIC METHODS (Formatting) //
-
-#pragma mark - // PUBLIC METHODS (Debugging) //
-
 #pragma mark - // DELEGATED METHODS //
 
 #pragma mark - // OVERWRITTEN METHODS //
 
 #pragma mark - // PRIVATE METHODS (General) //
 
-+ (NSDictionary *)dictionaryForPrettyFunction:(NSString *)prettyFunction
++ (NSDictionary *)dictionaryForPrettyFunction:(nonnull NSString *)prettyFunction
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
-    
-    if (!prettyFunction)
-    {
-        if(PRINT_DEBUGGER) AKLog(@"[INFO] %@ cannot be nil for %s", stringFromVariable(prettyFunction), __PRETTY_FUNCTION__);
-        return nil;
-    }
     
     NSArray *components = [prettyFunction componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"[ ]"]];
     if (components.count != 4)
     {
-        if(PRINT_DEBUGGER) AKLog(@"[INFO] Could not parse %@ for %s", stringFromVariable(prettyFunction), __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] Could not parse %@ for %s", stringFromVariable(prettyFunction), __PRETTY_FUNCTION__);
         return nil;
     }
     
@@ -183,8 +172,7 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
         methodScope = [NSNumber numberWithInt:AKInstanceMethod];
     }
     else AKLog(@"[WARNING] Unknown %@ for %s", stringFromVariable(methodScope), __PRETTY_FUNCTION__);
-    NSString *className;
-    NSString *categoryName;
+    NSString *className, *categoryName;
     NSArray *classComponents = [[components objectAtIndex:1] componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"()"]];
     if (classComponents.count == 3)
     {
@@ -291,169 +279,103 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (logType == AKLogTypeMethodName)
-    {
-        if (![RULES_CLASS printMethodNames])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_METHOD_NAMES = NO for %s", __PRETTY_FUNCTION__);
+    SEL rule;
+    switch (logType) {
+        case AKLogTypeMethodName:
+            rule = @selector(printMethodNames);
+            break;
+        case AKLogTypeInfo:
+            rule = @selector(printInfos);
+            break;
+        case AKLogTypeDebug:
+            rule = @selector(printDebugs);
+            break;
+        case AKLogTypeNotice:
+            rule = @selector(printNotices);
+            break;
+        case AKLogTypeAlert:
+            rule = @selector(printAlerts);
+            break;
+        case AKLogTypeWarning:
+            rule = @selector(printWarnings);
+            break;
+        case AKLogTypeError:
+            rule = @selector(printErrors);
+            break;
+        case AKLogTypeCritical:
+            rule = @selector(printCriticals);
+            break;
+        case AKLogTypeEmergency:
+            rule = @selector(printEmergencies);
+            break;
+        default:
+            if (PRINT_DEBUGGER) AKLog(@"Unknown %@ for %s", stringFromVariable(logType), __PRETTY_FUNCTION__);
             return NO;
-        }
     }
-    else if (logType == AKLogTypeEmergency)
-    {
-        if (![RULES_CLASS printWarnings])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_WARNINGS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeAlert)
-    {
-        if (![RULES_CLASS printAlerts])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_ALERTS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeCritical)
-    {
-        if (![RULES_CLASS printFailures])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_CRITICAL = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeError)
-    {
-        if (![RULES_CLASS printErrors])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_ERRORS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeWarning)
-    {
-        if (![RULES_CLASS printWarnings])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_WARNINGS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeNotice)
-    {
-        if (![RULES_CLASS printNotices])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_NOTICES = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeInfo)
-    {
-        if (![RULES_CLASS printInformation])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_INFO = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if (logType == AKLogTypeDebug)
-    {
-        if (![RULES_CLASS printDebug])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_DEBUG = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else
-    {
-        if (PRINT_DEBUGGER) AKLog(@"[INFO] Unknown logType for %s", __PRETTY_FUNCTION__);
-        return NO;
-    }
-    return YES;
+    
+    BOOL shouldPrint = [AKDebugger boolForRule:rule];
+    if (PRINT_DEBUGGER && !shouldPrint) AKLog(@"[INFO] %@ = NO for %s", NSStringFromSelector(rule), __PRETTY_FUNCTION__);
+    return shouldPrint;
 }
 
 + (BOOL)printForMethodType:(AKMethodType)methodType
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
+    SEL rule;
     switch (methodType) {
         case AKMethodTypeSetup:
-            if (![RULES_CLASS printSetup])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_SETUP = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printSetups);
             break;
         case AKMethodTypeSetter:
-            if (![RULES_CLASS printSetters])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_SETTERS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printSetters);
             break;
         case AKMethodTypeGetter:
-            if (![RULES_CLASS printGetters])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_GETTERS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printGetters);
             break;
         case AKMethodTypeCreator:
-            if (![RULES_CLASS printCreators])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_CREATORS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printCreators);
             break;
         case AKMethodTypeDeletor:
-            if (![RULES_CLASS printDeletors])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_DELETORS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printDeletors);
             break;
         case AKMethodTypeAction:
-            if (![RULES_CLASS printActions])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_ACTIONS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printActions);
             break;
         case AKMethodTypeValidator:
-            if (![RULES_CLASS printValidators])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VALIDATORS = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printValidators);
             break;
         case AKMethodTypeUnspecified:
-            if (![RULES_CLASS printUnspecified])
-            {
-                if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_UNSPECIFIED = NO for %s", __PRETTY_FUNCTION__);
-                return NO;
-            }
+            rule = @selector(printUnspecifieds);
             break;
         default:
-            AKLog(@"[WARNING] Unrecognized methodType for %s", __PRETTY_FUNCTION__);
+            if (PRINT_DEBUGGER) AKLog(@"Unknown %@ for %s", stringFromVariable(logType), __PRETTY_FUNCTION__);
             return NO;
-            break;
     }
-    return YES;
+    
+    BOOL shouldPrint = [AKDebugger boolForRule:rule];
+    if (PRINT_DEBUGGER && !shouldPrint) AKLog(@"[INFO] %@ = NO for %s", NSStringFromSelector(rule), __PRETTY_FUNCTION__);
+    return shouldPrint;
 }
 
-+ (BOOL)printForCustomCategory:(NSString *)category
++ (BOOL)printForTag:(NSString *)tag
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (([RULES_CLASS customCategoriesToPrint].count > 0) && (![[RULES_CLASS customCategoriesToPrint] containsObject:category]))
+    NSArray *tagsToSkip = [AKDebugger arrayForRule:@selector(tagsToSkip)];
+    if (tagsToSkip && ([tagsToSkip containsObject:tag]))
     {
-        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", category, __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", tag, __PRETTY_FUNCTION__);
         return NO;
     }
-    else if (([RULES_CLASS customCategoriesToSkip].count > 0) && ([[RULES_CLASS customCategoriesToSkip] containsObject:category]))
+    
+    NSArray *tagsToPrint = [AKDebugger arrayForRule:@selector(tagsToPrint)];
+    if (tagsToPrint && (![tagsToPrint containsObject:tag]))
     {
-        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", category, __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", tag, __PRETTY_FUNCTION__);
         return NO;
     }
+    
     return YES;
 }
 
@@ -461,28 +383,18 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (methodScope == AKClassMethod)
-    {
-        if (![RULES_CLASS printClassMethods])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_CLASS_METHODS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
+    SEL rule;
+    switch (methodScope) {
+        case AKClassMethod:
+            rule = @selector(printClassMethods);
+            break;
+        case AKInstanceMethod:
+            rule = @selector(printInstanceMethods);
+            break;
     }
-    else if (methodScope == AKInstanceMethod)
-    {
-        if (![RULES_CLASS printInstanceMethods])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_INSTANCE_METHODS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else
-    {
-        AKLog(@"[WARNING] Unknown methodScope for %s", __PRETTY_FUNCTION__);
-        return NO;
-    }
-    return YES;
+    BOOL shouldPrint = [AKDebugger boolForRule:rule];
+    if (PRINT_DEBUGGER && !shouldPrint) AKLog(@"[INFO] %@ = NO for %s", NSStringFromSelector(rule), __PRETTY_FUNCTION__);
+    return shouldPrint;
 }
 
 + (BOOL)printForClass:(NSString *)className
@@ -496,86 +408,79 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
         return NO;
     }
     
-    if ([class isSubclassOfClass:[UIViewController class]])
+    NSArray *classesToSkip = [AKDebugger arrayForRule:@selector(tagsToSkip)];
+    if (classesToSkip)
     {
-        if (![RULES_CLASS printViewControllers])
+        for (NSString *classToSkip in classesToSkip)
         {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VIEWCONTROLLERS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
+            if ([NSClassFromString(className) isSubclassOfClass:NSClassFromString(classToSkip)])
+            {
+                if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ = NO for %s", classToSkip, __PRETTY_FUNCTION__);
+                return NO;
+            }
+        }
+    }
+    
+    NSArray *classesToPrint = [AKDebugger arrayForRule:@selector(tagsToPrint)];
+    if (classesToPrint)
+    {
+        for (NSString *classToPrint in classesToPrint)
+        {
+            if ([NSClassFromString(className) isSubclassOfClass:NSClassFromString(classToPrint)])
+            {
+                return YES;
+            }
         }
         
-        if ([[RULES_CLASS viewControllersToSkip] containsObject:className])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if ([class isSubclassOfClass:[UIView class]])
-    {
-        if (![RULES_CLASS printViews])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_VIEWS = NO for %s", __PRETTY_FUNCTION__);
-            return NO;
-        }
-        
-        if ([[RULES_CLASS viewsToSkip] containsObject:className])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else if ([RULES_CLASS printOtherClasses])
-    {
-        if ([[RULES_CLASS otherClassesToSkip] containsObject:className])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", className, __PRETTY_FUNCTION__);
-            return NO;
-        }
-    }
-    else
-    {
-        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_OTHERCLASSES = NO for %s", __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ = NO for %s", className, __PRETTY_FUNCTION__);
         return NO;
     }
     
     return YES;
 }
 
-+ (BOOL)printForCategory:(NSString *)categoryName
++ (BOOL)printForCategory:(NSString *)category
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    if (![RULES_CLASS printCategories])
+    if (![AKDebugger boolForRule:@selector(printCategories)])
     {
         if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_CATEGORIES = NO for %s", __PRETTY_FUNCTION__);
         return NO;
     }
     
-    if ([[RULES_CLASS categoriesToSkip] containsObject:categoryName])
+    NSArray *categoriesToSkip = [AKDebugger arrayForRule:@selector(categoriesToSkip)];
+    if (categoriesToSkip && ([categoriesToSkip containsObject:category]))
     {
-        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", categoryName, __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", category, __PRETTY_FUNCTION__);
+        return NO;
+    }
+    
+    NSArray *categoriesToPrint = [AKDebugger arrayForRule:@selector(categoriesToPrint)];
+    if (categoriesToPrint && (![categoriesToPrint containsObject:category]))
+    {
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", category, __PRETTY_FUNCTION__);
         return NO;
     }
     
     return YES;
 }
 
-+ (BOOL)printForMethodName:(NSString *)methodName
++ (BOOL)printForMethodName:(NSString *)method
 {
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
     
-    NSSet *methodsToPrint = [RULES_CLASS methodsToPrint];
-    if (methodsToPrint)
+    NSArray *methodsToSkip = [AKDebugger arrayForRule:@selector(methodsToSkip)];
+    if (methodsToSkip && ([methodsToSkip containsObject:method]))
     {
-        if (![methodsToPrint containsObject:methodName])
-        {
-            if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ does not contain %@ for %s", stringFromVariable(methodsToPrint), methodName, __PRETTY_FUNCTION__);
-            return NO;
-        }
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ = NO for %s", method, __PRETTY_FUNCTION__);
+        return NO;
     }
-    else if ([[RULES_CLASS methodsToSkip] containsObject:methodName])
+    
+    NSArray *methodsToPrint = [AKDebugger arrayForRule:@selector(methodsToPrint)];
+    if (methodsToPrint && (![methodsToPrint containsObject:method]))
     {
-        if (PRINT_DEBUGGER) AKLog(@"[INFO] PRINT_%@ = NO for %s", methodName, __PRETTY_FUNCTION__);
+        if (PRINT_DEBUGGER) AKLog(@"[INFO] %@ = NO for %s", method, __PRETTY_FUNCTION__);
         return NO;
     }
     
@@ -629,5 +534,20 @@ __AK_MAKE_LOG_FUNCTION(ASL_LEVEL_EMERG, AKLogEmergency)
     if (PRINT_DEBUGGER) AKLog(@"%s", __PRETTY_FUNCTION__);
 }
 
+#pragma mark - // PRIVATE METHODS (Rules) //
+
++ (BOOL)boolForRule:(SEL)rule
+{
+    if ([RULES_CLASS respondsToSelector:rule]) return (BOOL)[RULES_CLASS performSelector:rule];
+    
+    return DEFAULT_BOOL;
+}
+
++ (NSArray <NSString *> *)arrayForRule:(SEL)rule
+{
+    if ([RULES_CLASS respondsToSelector:rule]) return (NSArray <NSString *> *)[RULES_CLASS performSelector:rule];
+    
+    return nil;
+}
 
 @end

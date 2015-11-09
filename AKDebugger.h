@@ -15,14 +15,14 @@
 
 #pragma mark - // IMPORTS (Public) //
 
+#import <asl.h>
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#include <asl.h>
-#import "AKDebuggerCategories.h"
 
 #pragma mark - // PROTOCOLS //
 
 @protocol AKDebuggerRules <NSObject>
+@optional
 
 // RULES (General) //
 
@@ -31,60 +31,72 @@
 + (BOOL)printClassMethods;
 + (BOOL)printInstanceMethods;
 
-+ (BOOL)printSetup;
+// RULES (AKLogType) //
+
++ (BOOL)printMethodNames;
++ (BOOL)printInfos;
++ (BOOL)printDebugs;
++ (BOOL)printNotices;
++ (BOOL)printAlerts;
++ (BOOL)printWarnings;
++ (BOOL)printErrors;
++ (BOOL)printCriticals;
++ (BOOL)printEmergencies;
+
+// RULES (AKMethodType) //
+
++ (BOOL)printSetups;
 + (BOOL)printSetters;
 + (BOOL)printGetters;
 + (BOOL)printCreators;
 + (BOOL)printDeletors;
 + (BOOL)printActions;
 + (BOOL)printValidators;
-+ (BOOL)printUnspecified;
++ (BOOL)printUnspecifieds;
 
-+ (BOOL)printMethodNames;
-+ (BOOL)printInformation;
-+ (BOOL)printDebug;
-+ (BOOL)printNotices;
-+ (BOOL)printAlerts;
-+ (BOOL)printWarnings;
-+ (BOOL)printErrors;
-+ (BOOL)printFailures;
-+ (BOOL)printEmergencies;
+// RULES (Tags) //
 
-// RULES (Custom Categories) //
++ (nullable NSArray <NSString *> *)tagsToPrint;
++ (nullable NSArray <NSString *> *)tagsToSkip;
 
-+ (NSSet *)customCategoriesToPrint;
-+ (NSSet *)customCategoriesToSkip;
+// RULES (Classes) //
 
-// RULES (View Controllers) //
-
-+ (BOOL)printViewControllers;
-+ (NSSet *)viewControllersToSkip;
-
-// RULES (Views) //
-
-+ (BOOL)printViews;
-+ (NSSet *)viewsToSkip;
-
-// RULES (Other) //
-
-+ (BOOL)printOtherClasses;
-+ (NSSet *)otherClassesToSkip;
-+ (NSSet *)methodsToSkip;
-
-+ (NSSet *)methodsToPrint;
++ (nullable NSArray <NSString *> *)classesToPrint;
++ (nullable NSArray <NSString *> *)classesToSkip;
 
 // RULES (Categories) //
 
 + (BOOL)printCategories;
-+ (NSSet *)categoriesToSkip;
++ (nullable NSArray <NSString *> *)categoriesToPrint;
++ (nullable NSArray <NSString *> *)categoriesToSkip;
+
+// RULES (Methods) //
+
++ (nullable NSArray <NSString *> *)methodsToPrint;
++ (nullable NSArray <NSString *> *)methodsToSkip;
 
 @end
 
 #pragma mark - // DEFINITIONS (Public) //
 
+// TAGS //
+
+#define AKD_UI @"User Interface"
+#define AKD_NOTIFICATION_CENTER @"Notification Center"
+#define AKD_DATA @"Data"
+#define AKD_ACCOUNTS @"Accounts"
+#define AKD_CORE_DATA @"Core Data"
+#define AKD_PARSE @"Parse"
+#define AKD_PUSH_NOTIFICATIONS @"Push Notifications"
+#define AKD_ANALYLTICS @"Analytics"
+
+// OPTIONS //
+
 #define PRINT_DEBUGGER NO
 
-#define RULES_CLASS NSClassFromString(@"AKDebuggerRules")
+// OTHER //
+
+#define RULES_CLASS (Class <AKDebuggerRules>)NSClassFromString(@"AKDebuggerRules")
 #define METHOD_NAME [NSString stringWithFormat:@"%s", __PRETTY_FUNCTION__]
 
 typedef enum {
@@ -100,14 +112,14 @@ typedef enum {
 } AKLogType;
 
 typedef enum {
-    AKMethodTypeUnspecified = 1,
     AKMethodTypeSetup,
     AKMethodTypeSetter,
     AKMethodTypeGetter,
     AKMethodTypeCreator,
     AKMethodTypeDeletor,
+    AKMethodTypeValidator,
     AKMethodTypeAction,
-    AKMethodTypeValidator
+    AKMethodTypeUnspecified,
 } AKMethodType;
 
 #ifdef NDEBUG
@@ -173,5 +185,5 @@ typedef enum {
 #endif
 
 @interface AKDebugger : NSObject
-+ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType customCategories:(NSArray *)categories message:(NSString *)message;
++ (void)logMethod:(nonnull NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType tags:(nullable NSArray *)tags message:(nullable NSString *)message;
 @end

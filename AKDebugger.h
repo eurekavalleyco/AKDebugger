@@ -137,49 +137,49 @@ typedef enum {
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_INFO
-    void AKLogInfo(NSString *format, ...);
+    void AKLogInfo(NSString * _Nullable format, ...);
 #else
     #define AKLogInfo(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_DEBUG
-    void AKLogDebug(NSString *format, ...);
+    void AKLogDebug(NSString * _Nullable format, ...);
 #else
     #define AKLogDebug(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_NOTICE
-    void AKLogNotice(NSString *format, ...);
+    void AKLogNotice(NSString * _Nullable format, ...);
 #else
     #define AKLogNotice(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ALERT
-    void AKLogAlert(NSString *format, ...);
+    void AKLogAlert(NSString * _Nullable format, ...);
 #else
     #define AKLogAlert(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_WARNING
-    void AKLogWarning(NSString *format, ...);
+    void AKLogWarning(NSString * _Nullable format, ...);
 #else
     #define AKLogWarning(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ERR
-    void AKLogError(NSString *format, ...);
+    void AKLogError(NSString * _Nullable format, ...);
 #else
     #define AKLogError(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_CRIT
-    void AKLogCritical(NSString *format, ...);
+    void AKLogCritical(NSString * _Nullable format, ...);
 #else
     #define AKLogCritical(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_EMERG
-    void AKLogEmergency(NSString *format, ...);
+    void AKLogEmergency(NSString * _Nullable format, ...);
 #else
     #define AKLogEmergency(...)
 #endif

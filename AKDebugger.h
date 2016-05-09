@@ -56,24 +56,24 @@
 
 // RULES (Tags) //
 
-+ (nullable NSArray <NSString *> *)tagsToPrint;
-+ (nullable NSArray <NSString *> *)tagsToSkip;
++ (NSArray <NSString *> *)tagsToPrint;
++ (NSArray <NSString *> *)tagsToSkip;
 
 // RULES (Classes) //
 
-+ (nullable NSArray <NSString *> *)classesToPrint;
-+ (nullable NSArray <NSString *> *)classesToSkip;
++ (NSArray <NSString *> *)classesToPrint;
++ (NSArray <NSString *> *)classesToSkip;
 
 // RULES (Categories) //
 
 + (BOOL)printCategories;
-+ (nullable NSArray <NSString *> *)categoriesToPrint;
-+ (nullable NSArray <NSString *> *)categoriesToSkip;
++ (NSArray <NSString *> *)categoriesToPrint;
++ (NSArray <NSString *> *)categoriesToSkip;
 
 // RULES (Methods) //
 
-+ (nullable NSArray <NSString *> *)methodsToPrint;
-+ (nullable NSArray <NSString *> *)methodsToSkip;
++ (NSArray <NSString *> *)methodsToPrint;
++ (NSArray <NSString *> *)methodsToSkip;
 
 @end
 
@@ -137,53 +137,53 @@ typedef enum {
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_INFO
-    void AKLogInfo(NSString * _Nullable format, ...);
+    void AKLogInfo(NSString * format, ...);
 #else
     #define AKLogInfo(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_DEBUG
-    void AKLogDebug(NSString * _Nullable format, ...);
+    void AKLogDebug(NSString * format, ...);
 #else
     #define AKLogDebug(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_NOTICE
-    void AKLogNotice(NSString * _Nullable format, ...);
+    void AKLogNotice(NSString * format, ...);
 #else
     #define AKLogNotice(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ALERT
-    void AKLogAlert(NSString * _Nullable format, ...);
+    void AKLogAlert(NSString * format, ...);
 #else
     #define AKLogAlert(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_WARNING
-    void AKLogWarning(NSString * _Nullable format, ...);
+    void AKLogWarning(NSString * format, ...);
 #else
     #define AKLogWarning(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_ERR
-    void AKLogError(NSString * _Nullable format, ...);
+    void AKLogError(NSString * format, ...);
 #else
     #define AKLogError(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_CRIT
-    void AKLogCritical(NSString * _Nullable format, ...);
+    void AKLogCritical(NSString * format, ...);
 #else
     #define AKLogCritical(...)
 #endif
 
 #if AK_COMPILE_TIME_LOG_LEVEL >= ASL_LEVEL_EMERG
-    void AKLogEmergency(NSString * _Nullable format, ...);
+    void AKLogEmergency(NSString * format, ...);
 #else
     #define AKLogEmergency(...)
 #endif
 
 @interface AKDebugger : NSObject
-+ (void)logMethod:(nonnull NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType tags:(nullable NSArray *)tags message:(nullable NSString *)message;
++ (void)logMethod:(NSString *)prettyFunction logType:(AKLogType)logType methodType:(AKMethodType)methodType tags:(NSArray *)tags message:(NSString *)message;
 @end

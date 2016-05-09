@@ -22,6 +22,8 @@
 #pragma mark - // PROTOCOLS //
 
 @protocol AKDebuggerRules <NSObject>
++ (Class)class;
+
 @optional
 
 // RULES (General) //
@@ -81,14 +83,13 @@
 
 // TAGS //
 
-#define AKD_UI @"User Interface"
-#define AKD_NOTIFICATION_CENTER @"Notification Center"
-#define AKD_DATA @"Data"
-#define AKD_ACCOUNTS @"Accounts"
-#define AKD_CORE_DATA @"Core Data"
-#define AKD_PARSE @"Parse"
-#define AKD_PUSH_NOTIFICATIONS @"Push Notifications"
-#define AKD_ANALYLTICS @"Analytics"
+extern NSString * const AKD_ACCOUNTS;
+extern NSString * const AKD_ANALYTICS;
+extern NSString * const AKD_CORE_DATA;
+extern NSString * const AKD_DATA;
+extern NSString * const AKD_NOTIFICATION_CENTER;
+extern NSString * const AKD_REMOTE_DATA;
+extern NSString * const AKD_UI;
 
 // OPTIONS //
 

@@ -19,6 +19,7 @@
 
 NSString * const AKD_ACCOUNTS = @"Accounts";
 NSString * const AKD_ANALYTICS = @"Analytics";
+NSString * const AKD_CONNECTIVITY = @"Connectivity";
 NSString * const AKD_CORE_DATA = @"Core Data";
 NSString * const AKD_DATA = @"Data";
 NSString * const AKD_NOTIFICATION_CENTER = @"Notification Center";

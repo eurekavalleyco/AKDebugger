@@ -85,6 +85,7 @@
 
 extern NSString * const AKD_ACCOUNTS;
 extern NSString * const AKD_ANALYTICS;
+extern NSString * const AKD_CONNECTIVITY;
 extern NSString * const AKD_CORE_DATA;
 extern NSString * const AKD_DATA;
 extern NSString * const AKD_NOTIFICATION_CENTER;

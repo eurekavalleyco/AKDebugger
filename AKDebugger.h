@@ -102,15 +102,15 @@ extern NSString * const AKD_UI;
 #define METHOD_NAME [NSString stringWithFormat:@"%s", __PRETTY_FUNCTION__]
 
 typedef enum {
-    AKLogTypeMethodName = 0,
-    AKLogTypeInfo = 1,
-    AKLogTypeDebug = 2,
-    AKLogTypeNotice = 3,
-    AKLogTypeAlert = 4,
-    AKLogTypeWarning = 5,
-    AKLogTypeError = 6,
-    AKLogTypeCritical = 7,
-    AKLogTypeEmergency = 8
+    AKLogTypeMethodName,
+    AKLogTypeInfo,
+    AKLogTypeDebug,
+    AKLogTypeNotice,
+    AKLogTypeAlert,
+    AKLogTypeWarning,
+    AKLogTypeError,
+    AKLogTypeCritical,
+    AKLogTypeEmergency
 } AKLogType;
 
 typedef enum {
